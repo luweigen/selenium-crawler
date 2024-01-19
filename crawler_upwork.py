@@ -114,6 +114,15 @@ while load_next_page:
         "job_link": "h2.job-tile-title a[href]"
     }
     next_pg_sel = "button[data-ev-label='pagination_next_page']"
+    detail_open_sel = "job_title"
+    details_selectors = {
+        "location":'div.job-details-loader div[data-test="LocationLabel"]',
+        "client_location": "div.job-details-loader li[data-qa='client-location']",
+        "client_job_posting_stats": "div.job-details-loader li[data-qa='client-job-posting-stats']",
+        "client_activity": 'div.job-details-loader ul.client-activity-items',
+        "client_contract_date": 'div.job-details-loader div[data-qa="client-contract-date"]'
+    }
+    detail_close_sel = "button[data-test='slider-close-desktop']"
 
     try:
         found = False
@@ -155,9 +164,25 @@ It will be each defined task and pre approved budget against your estimate. It w
         # 处理单个值的selectors
         for key, sel in item_selectors.items():
             try:
-                data[key] = el.find_element(By.CSS_SELECTOR, sel).text
+                elem = el.find_element(By.CSS_SELECTOR, sel)
+                data[key] = elem.text
+                if key == detail_open_sel:
+                    #elem.click()
+                    driver.execute_script("arguments[0].click();", elem)#walk around for Safari
+                    time.sleep(2)
+                    for k, s in details_selectors.items():
+                        try:
+                            data[k] = driver.find_element(By.CSS_SELECTOR, s).text.strip()
+                        except:
+                            data[k] = ""
+                    close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
+                    #close.click()
+                    driver.execute_script("arguments[0].click();", close)#walk around for Safari
             except:
                 data[key] = ""
+                if key == detail_open_sel:
+                    for k, s in details_selectors.items():
+                        data[k] = ""
 
         # 处理可能有多个值的multi_selectors
         for key, sel in item_multi_selectors.items():
