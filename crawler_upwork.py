@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.service import Service
+#from selenium.webdriver.chrome.service import Service
 import random
 import time
 from datetime import datetime
@@ -27,7 +27,7 @@ def handler(signum, frame):
 signal.signal(signal.SIGINT, handler)
 
 
-service = Service(executable_path='./chromedriver-mac-arm64/chromedriver')
+#service = Service(executable_path='./chromedriver-mac-arm64/chromedriver')
 
 chrome_options = Options()
 # chrome_options.add_argument("--incognito")
@@ -64,7 +64,7 @@ def save_main_file():
 
 url = f'https://www.upwork.com/nx/search/jobs/?nbs=1&page=1&q={keyword}&sort=recency'
 
-driver = webdriver.Chrome(options=chrome_options, service=service)
+driver = webdriver.Safari()#Chrome(options=chrome_options, service=service)
 
 driver.get(url)
 time.sleep(2)
@@ -78,6 +78,21 @@ if os.path.exists(main_csv_file):
     df = pd.read_csv(main_csv_file)
     if not df.empty:
         last_saved_job_link = df.iloc[-1]['job_link']
+
+last_pg_txt = ''
+
+def go_next_page(driver, next_pg_sel):
+    # detect next button
+    nextButton = driver.find_elements(By.CSS_SELECTOR, next_pg_sel)
+
+        
+    # detect next button disabled
+    if (len(nextButton) == 0):
+        raise Exception('Not found',next_pg_sel)
+    
+    # move to next page
+    #nextButton[0].click()
+    driver.execute_script("arguments[0].click();", nextButton[0])#walk around for Safari
 
 load_next_page = True
 while load_next_page:
@@ -101,13 +116,27 @@ while load_next_page:
     next_pg_sel = "button[data-ev-label='pagination_next_page']"
 
     try:
-        # wait content to be loaded
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, items_sel)))
+        found = False
+        for i in range(6):
+            # wait content to be loaded
+            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, items_sel)))
+            items = driver.find_elements(By.CSS_SELECTOR, items_sel)
+            if len(items)>0 and items[0].text!=last_pg_txt:
+                last_pg_txt = items[0].text
+                print(f"{items_sel} found")
+                found = True
+                break
+            else:
+                print("retry next page")
+                go_next_page(driver,next_pg_sel)
+
+                time.sleep(5)
+
+        if not found:
+            break
     except:
         break
-    print(f"{items_sel} found")
 
-    items = driver.find_elements(By.CSS_SELECTOR, items_sel)
     for i in range(len(items)):
         el = items[i]
         #print(f"{i} ### {el.get_attribute('innerHTML')}")   #TODO: LLM to parse HTML
@@ -163,17 +192,8 @@ It will be each defined task and pre approved budget against your estimate. It w
             df.to_csv(temp_csv_file, mode='a', index=False, header=False)
 
     if load_next_page:
-        # detect next button
-        nextButton = driver.find_elements(By.CSS_SELECTOR, next_pg_sel)
-
-            
-        # detect next button disabled
-        if (len(nextButton) == 0):
-            break          
-        
-        # move to next page
         try:
-            nextButton[0].click()
+            go_next_page(driver,next_pg_sel)
         except:
             break
         time.sleep(random.randrange(1, 5))
