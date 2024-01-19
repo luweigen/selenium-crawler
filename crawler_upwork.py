@@ -31,7 +31,7 @@ service = Service(executable_path='./chromedriver-mac-arm64/chromedriver')
 
 chrome_options = Options()
 # chrome_options.add_argument("--incognito")
-chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--window-size=1200x880")
 chrome_options.add_argument("--start-maximized")
 chrome_options.add_argument('--ignore-ssl-errors=yes')
 chrome_options.add_argument('--ignore-certificate-errors')
@@ -86,7 +86,6 @@ while load_next_page:
     items_sel = "section[data-test='JobsList'] > article"
     item_selectors = {
         "posted_time": "div.job-tile-header small span:nth-of-type(2)",
-        "job_link": "h2.job-tile-title a[href]",
         "job_title": "h2.job-tile-title a",
         "job_type": "li[data-test='job-type-label']",
         "experience_level": "li[data-test='experience-level']",
@@ -101,8 +100,11 @@ while load_next_page:
     }
     next_pg_sel = "button[data-ev-label='pagination_next_page']"
 
-    # wait content to be loaded
-    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, items_sel)))
+    try:
+        # wait content to be loaded
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, items_sel)))
+    except:
+        break
     print(f"{items_sel} found")
 
     items = driver.find_elements(By.CSS_SELECTOR, items_sel)
@@ -130,13 +132,18 @@ It will be each defined task and pre approved budget against your estimate. It w
 
         # 处理可能有多个值的multi_selectors
         for key, sel in item_multi_selectors.items():
-            elements = el.find_elements(By.CSS_SELECTOR, sel)
-            data[key] = [element.text for element in elements if element.text.strip()]
+            try:
+                elements = el.find_elements(By.CSS_SELECTOR, sel)
+                data[key] = [element.text for element in elements if element.text.strip()]
+            except:
+                data[key] = []
 
         # 处理属性的attr_selectors
         for key, sel in item_attr_selectors.items():
             try:
-                data[key] = el.find_element(By.CSS_SELECTOR, sel).get_attribute('href')
+                #data[key] = el.find_element(By.CSS_SELECTOR, sel).get_attribute('href')
+                attr_name = sel[sel.rfind('[')+1 : sel.rfind(']')]
+                data[key] = el.find_element(By.CSS_SELECTOR, sel).get_attribute(attr_name)
             except:
                 data[key] = ""
 
@@ -165,8 +172,11 @@ It will be each defined task and pre approved budget against your estimate. It w
             break          
         
         # move to next page
-        nextButton[0].click()
-        random.randrange(2, 20)
+        try:
+            nextButton[0].click()
+        except:
+            break
+        time.sleep(random.randrange(1, 5))
 
         counter += 1
         print('page: ' + str(counter))
