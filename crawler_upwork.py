@@ -5,7 +5,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-#from selenium.webdriver.chrome.service import Service
+from compatibledriver import ChromeDriver, SafariDriver
+
+
 import random
 import time
 from datetime import datetime
@@ -26,8 +28,6 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGINT, handler)
 
-
-#service = Service(executable_path='./chromedriver-mac-arm64/chromedriver')
 
 chrome_options = Options()
 # chrome_options.add_argument("--incognito")
@@ -64,7 +64,7 @@ def save_main_file():
 
 url = f'https://www.upwork.com/nx/search/jobs/?nbs=1&page=1&q={keyword}&sort=recency'
 
-driver = webdriver.Safari()#Chrome(options=chrome_options, service=service)
+driver = SafariDriver()#ChromeDriver(chrome_options, './chromedriver-mac-arm64/chromedriver')
 
 driver.get(url)
 time.sleep(2)
@@ -92,7 +92,8 @@ def go_next_page(driver, next_pg_sel):
     
     # move to next page
     #nextButton[0].click()
-    driver.execute_script("arguments[0].click();", nextButton[0])#walk around for Safari
+    #driver.execute_script("arguments[0].click();", nextButton[0])#walk around for Safari
+    driver.click_element(nextButton[0])
 
 load_next_page = True
 while load_next_page:
@@ -168,7 +169,8 @@ It will be each defined task and pre approved budget against your estimate. It w
                 data[key] = elem.text
                 if key == detail_open_sel:
                     #elem.click()
-                    driver.execute_script("arguments[0].click();", elem)#walk around for Safari
+                    #driver.execute_script("arguments[0].click();", elem)#walk around for Safari
+                    driver.click_element(elem)
                     time.sleep(2)
                     for k, s in details_selectors.items():
                         try:
@@ -177,7 +179,8 @@ It will be each defined task and pre approved budget against your estimate. It w
                             data[k] = ""
                     close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
                     #close.click()
-                    driver.execute_script("arguments[0].click();", close)#walk around for Safari
+                    #driver.execute_script("arguments[0].click();", close)#walk around for Safari
+                    driver.click_element(close)
             except:
                 data[key] = ""
                 if key == detail_open_sel:
