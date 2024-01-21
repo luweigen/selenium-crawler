@@ -14,6 +14,7 @@ class DataFileHandler:
         self.main_csv_file = f'{self.site}-{query}.csv'
         self.temp_csv_file = f'{self.site}-{self.run_start_time}.csv'
         self.last_saved_main_key = self.get_last_saved_key()
+        print(f"last_saved_main_key={self.last_saved_main_key}")
         signal.signal(signal.SIGINT, self.save_main_file)
 
     def save_main_file(self, signum=None, frame=None):#signal handler(signum=None, frame=None)
