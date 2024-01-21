@@ -59,7 +59,7 @@ item_selectors = {
     }
 }
 next_pg_sel = "button[data-ev-label='pagination_next_page']"
-detail_open_sel = "job_title"
+detail_open_sel = "h2.job-tile-title a"
 details_selectors = {
     "location":'div.job-details-loader div[data-test="LocationLabel"]',
     "client_location": "div.job-details-loader li[data-qa='client-location']",
@@ -123,18 +123,18 @@ while load_next_page:
         for key, sel in item_selectors.items():
             data[key] = driver.extract_data(el, sel)
 
-            if key == detail_open_sel:
-                try:
-                    elem = el.find_element(By.CSS_SELECTOR, sel)
-                    driver.click_element(elem)
-                    time.sleep(2)
-                    for k, s in details_selectors.items():
-                        data[k] = driver.extract_data(driver, s)
-                    close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
-                    driver.click_element(close)
-                except:
-                    for k, s in details_selectors.items():
-                        data[k] = ""
+        if detail_open_sel:
+            try:
+                elem = el.find_element(By.CSS_SELECTOR, detail_open_sel)
+                driver.click_element(elem)
+                time.sleep(2)
+                for k, s in details_selectors.items():
+                    data[k] = driver.extract_data(driver, s)
+                close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
+                driver.click_element(close)
+            except:
+                for k, s in details_selectors.items():
+                    data[k] = ""
 
         # 检查是否有重复的job_link
         current_job_link = data.get('job_link', '')
