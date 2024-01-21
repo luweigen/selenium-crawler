@@ -130,8 +130,10 @@ while load_next_page:
                 time.sleep(2)
                 for k, s in details_selectors.items():
                     data[k] = driver.extract_data(driver, s)
-                close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
-                driver.click_element(close)
+
+                if detail_close_sel:
+                    close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
+                    driver.click_element(close)
             except:
                 for k, s in details_selectors.items():
                     data[k] = ""
