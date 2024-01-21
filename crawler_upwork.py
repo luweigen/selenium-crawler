@@ -101,19 +101,33 @@ while load_next_page:
     #TODO: LLM to find these
     items_sel = "section[data-test='JobsList'] > article"
     item_selectors = {
+        #"posted_time": "div.job-tile-header small span:nth-of-type(2)",
+        #"job_title": "h2.job-tile-title a",
+        #"job_type": "li[data-test='job-type-label']",
+        #"experience_level": "li[data-test='experience-level']",
+        #"duration_hours": "li[data-test='duration-label']",
+        #"job_description": "div[data-test*='JobDescription'] p"
         "posted_time": "div.job-tile-header small span:nth-of-type(2)",
         "job_title": "h2.job-tile-title a",
         "job_type": "li[data-test='job-type-label']",
         "experience_level": "li[data-test='experience-level']",
         "duration_hours": "li[data-test='duration-label']",
-        "job_description": "div[data-test*='JobDescription'] p"
+        "job_description": "div[data-test='JobDescription'] p",
+        "skill_tags": {
+            "selector": "span[data-test='token'] span",
+            "type": "multi-text"
+        },
+        "job_link": {
+            "selector": "h2.job-tile-title a[href]",
+            "type": "attr"
+        }
     }
-    item_multi_selectors = {
-        "skill_tags": "span[data-test='token'] span"
-    }
-    item_attr_selectors = {
-        "job_link": "h2.job-tile-title a[href]"
-    }
+    #item_multi_selectors = {
+    #    "skill_tags": "span[data-test='token'] span"
+    #}
+    #item_attr_selectors = {
+    #    "job_link": "h2.job-tile-title a[href]"
+    #}
     next_pg_sel = "button[data-ev-label='pagination_next_page']"
     detail_open_sel = "job_title"
     details_selectors = {
@@ -131,8 +145,8 @@ while load_next_page:
             # wait content to be loaded
             WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, items_sel)))
             items = driver.find_elements(By.CSS_SELECTOR, items_sel)
-            if len(items)>0 and items[0].text!=last_pg_txt:
-                last_pg_txt = items[0].text
+            if len(items)>0 and items[-1].text!=last_pg_txt:
+                last_pg_txt = items[-1].text
                 print(f"{items_sel} found")
                 found = True
                 break
@@ -161,48 +175,21 @@ It will be each defined task and pre approved budget against your estimate. It w
         data = {}
         data['record_time'] = formatdate(localtime=True, usegmt=True)
 
-
-        # 处理单个值的selectors
         for key, sel in item_selectors.items():
-            try:
-                elem = el.find_element(By.CSS_SELECTOR, sel)
-                data[key] = elem.text
-                if key == detail_open_sel:
-                    #elem.click()
-                    #driver.execute_script("arguments[0].click();", elem)#walk around for Safari
+            data[key] = driver.extract_data(el, sel)
+
+            if key == detail_open_sel:
+                try:
+                    elem = el.find_element(By.CSS_SELECTOR, sel)
                     driver.click_element(elem)
                     time.sleep(2)
                     for k, s in details_selectors.items():
-                        try:
-                            data[k] = driver.find_element(By.CSS_SELECTOR, s).text.strip()
-                        except:
-                            data[k] = ""
+                        data[k] = driver.extract_data(driver, s)
                     close = driver.find_element(By.CSS_SELECTOR, detail_close_sel)
-                    #close.click()
-                    #driver.execute_script("arguments[0].click();", close)#walk around for Safari
                     driver.click_element(close)
-            except:
-                data[key] = ""
-                if key == detail_open_sel:
+                except:
                     for k, s in details_selectors.items():
                         data[k] = ""
-
-        # 处理可能有多个值的multi_selectors
-        for key, sel in item_multi_selectors.items():
-            try:
-                elements = el.find_elements(By.CSS_SELECTOR, sel)
-                data[key] = [element.text for element in elements if element.text.strip()]
-            except:
-                data[key] = []
-
-        # 处理属性的attr_selectors
-        for key, sel in item_attr_selectors.items():
-            try:
-                #data[key] = el.find_element(By.CSS_SELECTOR, sel).get_attribute('href')
-                attr_name = sel[sel.rfind('[')+1 : sel.rfind(']')]
-                data[key] = el.find_element(By.CSS_SELECTOR, sel).get_attribute(attr_name)
-            except:
-                data[key] = ""
 
         # 检查是否有重复的job_link
         current_job_link = data.get('job_link', '')
