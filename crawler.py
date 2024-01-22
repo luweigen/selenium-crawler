@@ -44,12 +44,13 @@ class Input(Action):
 
 
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel, open_details=None, details_selectors=None, close_details=None):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors
         self.main_key = main_key
         self.next_pg_sel = next_pg_sel
+        self.next_pg_act = next_pg_act
         self.open_details = open_details
         self.details_selectors = details_selectors
         self.close_details = close_details
@@ -78,7 +79,7 @@ class RecordItems(Action):
                         break
                     else:
                         print("retry next page")
-                        self.go_next_page()
+                        self.go_next_page(driver)
 
                         time.sleep(5)
 
@@ -116,10 +117,13 @@ class RecordItems(Action):
 
     def go_next_page(self, driver):
         try:
-            nextButton = driver.find_elements(By.CSS_SELECTOR, self.next_pg_sel)
-            if not nextButton:
-                return False
-            driver.click_element(nextButton[0])
+            if self.next_pg_sel:
+                nextButton = driver.find_elements(By.CSS_SELECTOR, self.next_pg_sel)
+                if not nextButton:
+                    return False
+                driver.click_element(nextButton[0])
+            if self.next_pg_act=="scroll":
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
             return True
         except Exception as e:
             print("Error moving to next page:", e)
@@ -129,7 +133,9 @@ class RecordItems(Action):
         data = {}
 
         for key, sel in self.item_selectors.items():
+            #print(f"{key}-{sel}")
             data[key] = driver.extract_data(el, sel)#from el
+            #print(data[key])
 
         # Handle details if necessary
         if self.open_details:
