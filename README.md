@@ -10,7 +10,7 @@ It's mainly built for the research of utilizing LLM to accomplish the data crawl
 This is what you need to install to run this program
 - python3
 - pip
-- Selenium Webdriver, e.g. [Chrome](https://googlechromelabs.github.io/chrome-for-testing/)
+- Selenium Webdriver, e.g. [Chrome](https://googlechromelabs.github.io/chrome-for-testing/), [Safari](https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari)
 
 ### Dependency
 ```
