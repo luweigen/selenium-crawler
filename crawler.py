@@ -15,15 +15,16 @@ class Action:
 
 
 class Input(Action):
-    def __init__(self, inputs, confirm_sel):
+    def __init__(self, inputs, confirm_sel, wait=2):
         super().__init__()
         self.inputs = inputs
         self.confirm_sel = confirm_sel
+        self.wait = wait
 
     def execute(self, driver, do_on_success=None):
         try:
             # wait content to be loaded
-            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self.confirm_sel)))
+            WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self.confirm_sel)))
 
             if do_on_success:
                 do_on_success()
@@ -38,7 +39,7 @@ class Input(Action):
 
             if queryButtons:
                 queryButtons[0].click()
-                time.sleep(2)
+                time.sleep(self.wait)
         except Exception as e:
             print(f"Input.execute error {e}")
 

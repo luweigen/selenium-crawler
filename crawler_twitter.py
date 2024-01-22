@@ -32,6 +32,12 @@ else:
 url = url = f'https://twitter.com/home'
 #TODO: LLM to find these
 actions=[
+        Input(
+            inputs=[
+            ],
+            confirm_sel='a[role="tab"][tabindex="-1"]',
+            wait=3
+        ),
         RecordItems(
             url = url,
             query = keyword,

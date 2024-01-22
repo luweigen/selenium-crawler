@@ -1,7 +1,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About This Project
 
-This is a mini web crawler project, it's can be used for crawling job search result on upwork.com and freelancer.com.
+This is a mini web crawler project, it's can be used for crawling job search result on upwork.com and freelancer.com or your twitter/X timelines.
 
 It's mainly built for the research of utilizing LLM to accomplish the data crawling tasks.
 
@@ -25,4 +25,7 @@ pip install pandas
 
 python crawler_upwork.py
 python crawler_freelancer.py
+python crawler_twitter.py
 ```
+
+To crawl some web sites like Twitter/X, you need to login in the pop-up browser window.
