@@ -13,8 +13,35 @@ class Action:
     def execute(self, driver):
         raise NotImplementedError("Execute method should be implemented by subclasses")
 
+
+class Input(Action):
+    def __init__(self, inputs, confirm_sel):
+        super().__init__()
+        self.inputs = inputs
+        self.confirm_sel = confirm_sel
+
+    def execute(self, driver):
+        try:
+            # wait content to be loaded
+            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self.confirm_sel)))
+            
+            for input in self.inputs:
+                queryInput = driver.find_element(By.CSS_SELECTOR, input['selector'])
+                queryInput.click()
+                queryInput.clear()
+                queryInput.send_keys(input['value'])
+            
+            queryButtons = driver.find_elements(By.CSS_SELECTOR, self.confirm_sel)
+
+            if queryButtons:
+                queryButtons[0].click()
+                time.sleep(2)
+        except Exception as e:
+            print(f"Input.execute error {e}")
+
+
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel, open_details, details_selectors, close_details):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel, open_details=None, details_selectors=None, close_details=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors

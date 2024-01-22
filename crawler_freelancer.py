@@ -63,6 +63,22 @@ def save_main_file():
         os.remove(temp_csv_file)
 
 url = f'https://www.freelancer.com/jobs/?status=all'
+site_model = {
+    "url":f'https://www.upwork.com/nx/search/jobs/?nbs=1&page=1&q={keyword}&sort=recency',
+    "pre-actions":[
+        {
+            "action":"input",
+            "inputs":[
+                {
+                    "selector":"input#keyword-input",
+                    "value":keyword
+                }
+            ],
+            "confirm":"button#search-submit"
+        }
+    ],
+    #items_sel to detail_close_sel 
+}
 
 driver = webdriver.Chrome(options=chrome_options, service=service)
 
@@ -103,9 +119,10 @@ while load_next_page:
     }
     next_pg_sel = "li[data-link='next_page'] a"
 
-    # wait content to be loaded
     try:
+        # wait content to be loaded
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, query_btn_sel)))
+        
         queryInput = driver.find_element(By.CSS_SELECTOR, query_input_sel)
         queryInput.click()
         queryInput.clear()
