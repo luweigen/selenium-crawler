@@ -6,6 +6,7 @@ from selenium.webdriver import Keys, ActionChains
 import json
 import os
 import platform
+from datafile import print_err
 
 class BrowserDriver:
     def __init__(self):
@@ -43,7 +44,7 @@ class BrowserDriver:
         # Store cookies in a file
         with open(path, 'w') as file:
             json.dump(cookies, file)
-        print(f'New Cookies saved to {path} successfully')
+        print_err(f'New Cookies saved to {path} successfully')
 
 
     def load_url_with_ookies(self, url):
@@ -63,7 +64,7 @@ class BrowserDriver:
 
             self.driver.get(url)
         else:
-            print(f'No cookies {path} file found')
+            print_err(f'No cookies {path} file found')
     
         #driver.refresh() # Refresh Browser after login
 
@@ -88,7 +89,7 @@ class BrowserDriver:
                 elif selector_info["type"] == "html":
                     return elements[0].get_attribute('innerHTML').strip()
         except:
-            print(f"{selector_info} not found")
+            print_err(f"{selector_info} not found")
             if isinstance(selector_info, dict) and "type" in selector_info and selector_info["type"].startswith("multi"):
                 return []  # Return empty list for multi-valued selectors
             else:

@@ -1,7 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from datafile import DataFileHandler
+from datafile import DataFileHandler, print_err
 
 import random
 import time
@@ -41,7 +41,7 @@ class Input(Action):
                 queryButtons[0].click()
                 time.sleep(self.wait)
         except Exception as e:
-            print(f"Input.execute error {e}")
+            print_err(f"Input.execute error {e}")
 
 
 class RecordItems(Action):
@@ -79,7 +79,7 @@ class RecordItems(Action):
                         found = True
                         break
                     else:
-                        print("retry next page")
+                        print_err("retry next page")
                         self.go_next_page(driver)
 
                         time.sleep(5)
@@ -97,7 +97,7 @@ class RecordItems(Action):
 
                 # Check for duplicates
                 if self.data_handler.is_duplicate(data.get(self.main_key, '')):
-                    print("Duplicate found, stopping.")
+                    print_err("Duplicate found, stopping.")
                     load_next_page = False
                     break
 
@@ -112,7 +112,7 @@ class RecordItems(Action):
 
                 time.sleep(random.randrange(1, 5))
                 counter += 1
-                print('Page:', counter)
+                print_err(f'Page:{counter}')
 
         self.data_handler.save_main_file()
 
@@ -127,16 +127,16 @@ class RecordItems(Action):
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
             return True
         except Exception as e:
-            print("Error moving to next page:", e)
+            print_err(f"Error moving to next page:{e}")
             return False
 
     def extract_item_data(self, el, driver):
         data = {}
 
         for key, sel in self.item_selectors.items():
-            #print(f"{key}-{sel}")
+            #print_err(f"{key}-{sel}")
             data[key] = driver.extract_data(el, sel)#from el
-            #print(data[key])
+            #print_err(data[key])
 
         # Handle details if necessary
         if self.open_details:

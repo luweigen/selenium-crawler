@@ -1,6 +1,7 @@
 from selenium.webdriver.chrome.options import Options
 from compatibledriver import ChromeDriver, SafariDriver
 from crawler import Crawler, RecordItems
+from datafile import print_err
 
 import argparse
 
@@ -24,7 +25,7 @@ driver = SafariDriver()#ChromeDriver(chrome_options, './chromedriver-mac-arm64/c
 
 
 if len(args.keyword)<1:
-    print('Enter keyword: ',end='')
+    print_err('Enter keyword: ',end='')
     keyword = input()
 else:
     keyword = args.keyword
