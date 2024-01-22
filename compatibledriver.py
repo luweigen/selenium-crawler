@@ -31,7 +31,12 @@ class BrowserDriver:
         if self.driver:
             self.driver.quit()
 
-    def save_cookies_to_path(self,path):
+    def get_cookie_path(self, url):
+        return f'{url.split("//")[1].split("/")[0].split(".")[-2]}-cookies.json'
+
+    def save_cookies_for_url(self,url):
+        path = self.get_cookie_path(url)
+
         # Get and store cookies after login
         cookies = self.driver.get_cookies()
 
@@ -41,7 +46,9 @@ class BrowserDriver:
         print(f'New Cookies saved to {path} successfully')
 
 
-    def load_cookies_from_path_to_url(self, path, url):
+    def load_url_with_ookies(self, url):
+        path = self.get_cookie_path(url)
+
         self.driver.get(url)
         # Check if cookies file exists
         if path in os.listdir():

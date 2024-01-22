@@ -10,7 +10,7 @@ class Action:
     def __init__(self):
         pass
 
-    def execute(self, driver):
+    def execute(self, driver, do_on_success=None):
         raise NotImplementedError("Execute method should be implemented by subclasses")
 
 
@@ -20,10 +20,13 @@ class Input(Action):
         self.inputs = inputs
         self.confirm_sel = confirm_sel
 
-    def execute(self, driver):
+    def execute(self, driver, do_on_success=None):
         try:
             # wait content to be loaded
             WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self.confirm_sel)))
+
+            if do_on_success:
+                do_on_success()
             
             for input in self.inputs:
                 queryInput = driver.find_element(By.CSS_SELECTOR, input['selector'])
@@ -58,7 +61,7 @@ class RecordItems(Action):
     def extract_site_name(self, url):
         return url.split("//")[1].split("/")[0].split(".")[-2]
 
-    def execute(self, driver):
+    def execute(self, driver, do_on_success=None):
         counter = 0
         load_next_page = True
         last_pg_txt = ''
@@ -78,6 +81,9 @@ class RecordItems(Action):
                         self.go_next_page()
 
                         time.sleep(5)
+
+                if do_on_success:
+                    do_on_success()
 
                 if not found:
                     break
@@ -105,6 +111,8 @@ class RecordItems(Action):
                 time.sleep(random.randrange(1, 5))
                 counter += 1
                 print('Page:', counter)
+
+        self.data_handler.save_main_file()
 
     def go_next_page(self, driver):
         try:
@@ -151,8 +159,8 @@ class Crawler:
         self.query = query
 
     def run(self):
-        self.driver.get(self.url)
+        self.driver.load_url_with_ookies(self.url)
         time.sleep(2)
 
         for action in self.actions:
-            action.execute(self.driver)
+            action.execute(self.driver, do_on_success=lambda : self.driver.save_cookies_for_url(self.url))
