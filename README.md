@@ -1,7 +1,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About This Project
 
-This is a mini web crawler project, it's used for crawling job search result on upwork.com.
+This is a mini web crawler project, it's can be used for crawling job search result on upwork.com and freelancer.com.
+
+It's mainly built for the research of utilizing LLM to accomplish the data crawling tasks.
 
 ### Prerequisites
 
