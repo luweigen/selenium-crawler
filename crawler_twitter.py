@@ -66,6 +66,7 @@ actions=[
             },
             main_key = "item_link",
             second_key = "additional",
+            time_key = "posted_time",
             #consecutive_duplicate = 5,
             next_pg_act = "scroll",
             storage="sql"

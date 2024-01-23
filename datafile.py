@@ -6,6 +6,7 @@ import signal
 from datetime import datetime
 from email.utils import formatdate
 import sys
+from dateutil import parser
 
 def print_err(text, end="\n"):
     # ANSI escape code for red
@@ -72,9 +73,10 @@ class DataFileHandler(DataHandler):
 import sqlite3
 
 class DataSQLiteHandler(DataHandler):
-    def __init__(self, main_key, site, query, second_key=None):
+    def __init__(self, main_key, site, query, second_key=None, time_key=None):
         self.main_key = main_key
         self.second_key = second_key
+        self.time_key = time_key
         self.site = site
         self.query = query
         self.db_file = f'{self.site}_{self.query}.sqlite'
@@ -88,6 +90,8 @@ class DataSQLiteHandler(DataHandler):
         table_columns = f"{self.main_key} TEXT PRIMARY KEY, record_time DATETIME"
         if self.second_key:
             table_columns += f", {self.second_key} TEXT"
+        if self.time_key:
+            table_columns += f", {self.time_key} DATETIME"
         c.execute(f'CREATE TABLE IF NOT EXISTS {self.table_name} ({table_columns})')
         conn.commit()
         conn.close()
@@ -99,6 +103,14 @@ class DataSQLiteHandler(DataHandler):
     def add_record_time(self, data):
         # 将时间格式化为 SQLite 接受的 datetime 格式
         data['record_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+    def __convert_to_sqlite_datetime_format(self, time_str):
+        # 将 ISO 8601 格式的字符串转换为 SQLite datetime 格式
+        try:
+            dt = parser.parse(time_str)
+        except:
+            return time_str
+        return dt.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
     def append_data(self, data):
         self.add_record_time(data)
@@ -112,6 +124,11 @@ class DataSQLiteHandler(DataHandler):
             if key not in existing_columns:
                 c.execute(f'ALTER TABLE {self.table_name} ADD COLUMN {key} TEXT;')
                 conn.commit()
+
+        if self.time_key and self.time_key in data and data[self.time_key]:
+            #print_err(f"{data[self.time_key]}", end="→")
+            data[self.time_key] = self.__convert_to_sqlite_datetime_format(data[self.time_key])                
+            #print_err(data[self.time_key])
 
         # 插入数据
         if self.second_key:

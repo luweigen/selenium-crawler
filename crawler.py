@@ -49,12 +49,13 @@ class Input(Action):
 
 
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, second_key=None, consecutive_duplicate=1, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, second_key=None, time_key=None, consecutive_duplicate=1, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors
         self.main_key = main_key
         self.second_key = second_key
+        #self.time_key = time_key
         self.consecutive_duplicate = consecutive_duplicate
         self.next_pg_sel = next_pg_sel
         self.next_pg_act = next_pg_act
@@ -65,7 +66,7 @@ class RecordItems(Action):
         self.query = query
         site = self.extract_site_name(url)
         if storage=="sql":
-            self.data_handler = DataSQLiteHandler(main_key=main_key, site=site, query=query, second_key=second_key)
+            self.data_handler = DataSQLiteHandler(main_key=main_key, site=site, query=query, second_key=second_key, time_key=time_key)
         else:
             self.data_handler = DataFileHandler(main_key=main_key, site=site, query=query)
 
