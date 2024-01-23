@@ -6,7 +6,7 @@ from datafile import print_err
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--keyword', type=str, default='AI', help="keyword")
+parser.add_argument('--keyword', type=str, default='Following', help="keyword")
 args = parser.parse_args()
 
 
@@ -66,6 +66,7 @@ actions=[
             },
             main_key = "item_link",
             next_pg_act = "scroll",
+            storage="sql"
         )
     ]
 

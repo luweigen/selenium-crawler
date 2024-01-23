@@ -1,7 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from datafile import DataFileHandler, print_err
+from datafile import DataSQLiteHandler, DataFileHandler, print_err
 
 import random
 import time
@@ -29,23 +29,27 @@ class Input(Action):
             if do_on_success:
                 do_on_success()
             
-            for input in self.inputs:
-                queryInput = driver.find_element(By.CSS_SELECTOR, input['selector'])
+            for inp in self.inputs:
+                queryInput = driver.find_element(By.CSS_SELECTOR, inp['selector'])
                 queryInput.click()
                 queryInput.clear()
-                queryInput.send_keys(input['value'])
+                queryInput.send_keys(inp['value'])
             
             queryButtons = driver.find_elements(By.CSS_SELECTOR, self.confirm_sel)
 
             if queryButtons:
                 queryButtons[0].click()
-                time.sleep(self.wait)
+                if self.wait<0:
+                    print_err("Enter to continue:",end="")
+                    input()
+                else:
+                    time.sleep(self.wait)
         except Exception as e:
             print_err(f"Input.execute error {e}")
 
 
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors
@@ -58,7 +62,10 @@ class RecordItems(Action):
         self.url = url
         self.query = query
         site = self.extract_site_name(url)
-        self.data_handler = DataFileHandler(main_key=main_key, site=site, query=query)
+        if storage=="sql":
+            self.data_handler = DataSQLiteHandler(main_key=main_key, site=site, query=query)
+        else:
+            self.data_handler = DataFileHandler(main_key=main_key, site=site, query=query)
 
     def extract_site_name(self, url):
         return url.split("//")[1].split("/")[0].split(".")[-2]
