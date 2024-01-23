@@ -49,11 +49,12 @@ class Input(Action):
 
 
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, second_key=None, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors
         self.main_key = main_key
+        self.second_key = second_key
         self.next_pg_sel = next_pg_sel
         self.next_pg_act = next_pg_act
         self.open_details = open_details
@@ -63,7 +64,7 @@ class RecordItems(Action):
         self.query = query
         site = self.extract_site_name(url)
         if storage=="sql":
-            self.data_handler = DataSQLiteHandler(main_key=main_key, site=site, query=query)
+            self.data_handler = DataSQLiteHandler(main_key=main_key, site=site, query=query, second_key=second_key)
         else:
             self.data_handler = DataFileHandler(main_key=main_key, site=site, query=query)
 
@@ -103,8 +104,8 @@ class RecordItems(Action):
                 data = self.extract_item_data(el, driver)
 
                 # Check for duplicates
-                if self.data_handler.is_duplicate(data.get(self.main_key, '')):
-                    print_err("Duplicate found, stopping.")
+                if self.data_handler.is_duplicate(data.get(self.main_key, ''), data.get(self.second_key, None) if self.second_key else None):
+                    print_err(f"Duplicate found, stopping.\n{data}")
                     load_next_page = False
                     break
 

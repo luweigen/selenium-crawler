@@ -65,6 +65,7 @@ actions=[
                 }
             },
             main_key = "item_link",
+            second_key = "additional",
             next_pg_act = "scroll",
             storage="sql"
         )

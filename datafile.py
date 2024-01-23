@@ -24,7 +24,7 @@ class DataHandler:
     def append_data(self, data):
         pass
 
-    def is_duplicate(self, current_data_key):
+    def is_duplicate(self, current_data_key, second_key=None):
         pass
 
 class DataFileHandler(DataHandler):
@@ -64,15 +64,17 @@ class DataFileHandler(DataHandler):
                 return df.iloc[-1][self.main_key]
         return None
 
-    def is_duplicate(self, current_data_key):
+    def is_duplicate(self, current_data_key, second_key=None):
+        #with CSV too expensive to find second key
         return current_data_key == self.last_saved_main_key
 
 
 import sqlite3
 
 class DataSQLiteHandler(DataHandler):
-    def __init__(self, main_key, site, query):
+    def __init__(self, main_key, site, query, second_key=None):
         self.main_key = main_key
+        self.second_key = second_key
         self.site = site
         self.query = query
         self.db_file = f'{self.site}_{self.query}.sqlite'
@@ -82,8 +84,11 @@ class DataSQLiteHandler(DataHandler):
     def __create_table(self):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-        c.execute(f'''CREATE TABLE IF NOT EXISTS {self.table_name} 
-                      ({self.main_key} TEXT PRIMARY KEY, record_time DATETIME)''')
+        # 创建表时，确保也包括 second_key（如果有）
+        table_columns = f"{self.main_key} TEXT PRIMARY KEY, record_time DATETIME"
+        if self.second_key:
+            table_columns += f", {self.second_key} TEXT"
+        c.execute(f'CREATE TABLE IF NOT EXISTS {self.table_name} ({table_columns})')
         conn.commit()
         conn.close()
 
@@ -97,8 +102,6 @@ class DataSQLiteHandler(DataHandler):
 
     def append_data(self, data):
         self.add_record_time(data)
-
-        # 连接到 SQLite 数据库
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
 
@@ -111,17 +114,36 @@ class DataSQLiteHandler(DataHandler):
                 conn.commit()
 
         # 插入数据
-        columns = ', '.join(data.keys())
-        placeholders = ':'+', :'.join(data.keys())
-        c.execute(f'INSERT OR IGNORE INTO {self.table_name} ({columns}) VALUES ({placeholders})', data)
+        if self.second_key:
+            # 确保 data 包含 second_key
+            if self.second_key not in data:
+                data[self.second_key] = ""  # 默认值统一为""
+
+            columns = ', '.join(data.keys())
+            placeholders = ':' + ', :'.join(data.keys())
+            c.execute(f'INSERT OR REPLACE INTO {self.table_name} ({columns}) VALUES ({placeholders})', data)
+        else:
+            # 如果没有 second_key，使用普通的插入逻辑
+            columns = ', '.join(data.keys())
+            placeholders = ':'+', :'.join(data.keys())
+            c.execute(f'INSERT OR IGNORE INTO {self.table_name} ({columns}) VALUES ({placeholders})', data)
 
         conn.commit()
         conn.close()
 
-    def is_duplicate(self, current_data_key):
+    def is_duplicate(self, current_data_key, current_second_key=None):
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
-        c.execute(f'SELECT COUNT(*) FROM {self.table_name} WHERE {self.main_key} = ?', (current_data_key,))
+        
+        if self.second_key and current_second_key is not None:
+            # 如果 second_key 存在，且提供了 current_second_key，则检查两者
+            c.execute(f'''SELECT COUNT(*) FROM {self.table_name}
+                          WHERE {self.main_key} = ? AND {self.second_key} = ?''', 
+                     (current_data_key, current_second_key))
+        else:
+            # 否则，只检查主键
+            c.execute(f'SELECT COUNT(*) FROM {self.table_name} WHERE {self.main_key} = ?', (current_data_key,))
+
         result = c.fetchone()[0]
         conn.close()
         return result > 0
