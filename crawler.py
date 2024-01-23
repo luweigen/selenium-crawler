@@ -164,16 +164,17 @@ class RecordItems(Action):
             try:
                 if 'selector' in self.open_details:
                     elem = el.find_element(By.CSS_SELECTOR, self.open_details['selector'])
-                    self.driver.click_element(elem)
+                    driver.click_element(elem)
                 time.sleep(2)
                 for k, s in self.details_selectors.items():
                     data[k] = driver.extract_data(driver, s)#from entire document
 
                 if self.close_details:
                     if 'selector' in self.close_details:
-                        close = self.driver.find_element(By.CSS_SELECTOR, self.close_details['selector'])
-                        self.driver.click_element(close)
+                        close = driver.find_element(By.CSS_SELECTOR, self.close_details['selector'])
+                        driver.click_element(close)
             except Exception as e:
+                #print_err(f"open details error:{e}")
                 for k, s in self.details_selectors.items():
                     data[k] = ""
 
