@@ -66,6 +66,7 @@ actions=[
             },
             main_key = "item_link",
             second_key = "additional",
+            #consecutive_duplicate = 5,
             next_pg_act = "scroll",
             storage="sql"
         )

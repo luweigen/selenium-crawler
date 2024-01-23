@@ -49,12 +49,13 @@ class Input(Action):
 
 
 class RecordItems(Action):
-    def __init__(self, url, query, items_sel, item_selectors, main_key, second_key=None, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
+    def __init__(self, url, query, items_sel, item_selectors, main_key, second_key=None, consecutive_duplicate=1, next_pg_sel=None, next_pg_act=None, open_details=None, details_selectors=None, close_details=None, storage=None):
         super().__init__()
         self.items_sel = items_sel
         self.item_selectors = item_selectors
         self.main_key = main_key
         self.second_key = second_key
+        self.consecutive_duplicate = consecutive_duplicate
         self.next_pg_sel = next_pg_sel
         self.next_pg_act = next_pg_act
         self.open_details = open_details
@@ -74,7 +75,8 @@ class RecordItems(Action):
     def execute(self, driver, do_on_success=None):
         counter = 0
         load_next_page = True
-        last_pg_txt = ''
+        #last_pg_txt = ''
+        recent_duplicates = []
 
         while load_next_page:
             try:
@@ -82,9 +84,10 @@ class RecordItems(Action):
                 for _ in range(6):
                     WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self.items_sel)))
                     items = driver.find_elements(By.CSS_SELECTOR, self.items_sel)
-                    if items and items[-1].text != last_pg_txt:
-                        last_pg_txt = items[-1].text
+                    if items and not driver.is_element_visited(items[-1]):#items[-1].text != last_pg_txt:
+                        #last_pg_txt = items[-1].text
                         found = True
+                        #有新数据了，但在前面的就数据可能没从DOM里删除
                         break
                     else:
                         print_err("retry next page")
@@ -101,13 +104,23 @@ class RecordItems(Action):
                 break
 
             for i, el in enumerate(items):
+                if driver.is_element_visited(el):
+                    #print_err(f"Skip {el.get_attribute('outerHTML')}")
+                    continue
+
                 data = self.extract_item_data(el, driver)
 
                 # Check for duplicates
-                if self.data_handler.is_duplicate(data.get(self.main_key, ''), data.get(self.second_key, None) if self.second_key else None):
-                    print_err(f"Duplicate found, stopping.\n{data}")
-                    load_next_page = False
-                    break
+                current_key = (data.get(self.main_key, ''), data.get(self.second_key, None) if self.second_key else None)
+
+                if self.data_handler.is_duplicate(*current_key):
+                    recent_duplicates.append(data)
+                    if len(recent_duplicates) >= self.consecutive_duplicate:
+                        print_err(f"Duplicate found, stopping. Recent duplicates:\n{recent_duplicates}")
+                        load_next_page = False
+                        break
+                else:
+                    recent_duplicates.clear()  # 清空队列，因为找到了一个新的非重复项
 
                 if not data.get(self.main_key, ''):
                     break

@@ -7,6 +7,7 @@ import json
 import os
 import platform
 from datafile import print_err
+import time
 
 class BrowserDriver:
     def __init__(self):
@@ -71,29 +72,44 @@ class BrowserDriver:
     def extract_data(self, element, selector_info):
         try:
             if isinstance(selector_info, str):  # Simple selector
+                self.mark_element(element)
                 return element.find_element(By.CSS_SELECTOR, selector_info).text.strip()
             else:  # Dictionary with additional instructions
                 elements = element.find_elements(By.CSS_SELECTOR, selector_info["selector"])
                 if selector_info["type"] == "multi-text":
+                    for elem in elements:
+                        self.mark_element(elem)
                     return [elem.text.strip() for elem in elements]
                 elif selector_info["type"] == "multi-html":
+                    for elem in elements:
+                        self.mark_element(elem)
                     return [elem.get_attribute('innerHTML').strip() for elem in elements]
                 elif selector_info["type"] == "attr":
                     sel = selector_info["selector"]
                     attr_name = sel[sel.rfind('[')+1 : sel.rfind(']')]
+                    self.mark_element(elements[0])
                     return elements[0].get_attribute(attr_name) if elements else ""
                 elif selector_info["type"] == "multi-attr":
                     sel = selector_info["selector"]
                     attr_name = sel[sel.rfind('[')+1 : sel.rfind(']')]
+                    for elem in elements:
+                        self.mark_element(elem)
                     return [elem.get_attribute(attr_name).strip() for elem in elements]
                 elif selector_info["type"] == "html":
-                    return elements[0].get_attribute('innerHTML').strip()
+                    self.mark_element(elements[0])
+                    return elements[0].get_attribute('innerHTML').strip()            
         except:
             print_err(f"{selector_info} not found")
             if isinstance(selector_info, dict) and "type" in selector_info and selector_info["type"].startswith("multi"):
                 return []  # Return empty list for multi-valued selectors
             else:
                 return ""  # Return empty string for single-valued selectors        
+
+    def mark_element(self, elem):
+        self.driver.execute_script("arguments[0].setAttribute('crawlervisited',arguments[1]);", elem, time.time())
+
+    def is_element_visited(self, elem):
+        return elem.get_attribute('crawlervisited') is not None
 
     def __getattr__(self, item):
         """
