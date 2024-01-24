@@ -69,7 +69,7 @@ class BrowserDriver:
     
         #driver.refresh() # Refresh Browser after login
 
-    def extract_data(self, element, selector_info):
+    def extract_data(self, element, selector_info, dirname="./"):
         try:
             if isinstance(selector_info, str):  # Simple selector
                 self.mark_element(element)
@@ -98,8 +98,15 @@ class BrowserDriver:
                 elif selector_info["type"] == "html":
                     self.mark_element(elements[0])
                     return elements[0].get_attribute('innerHTML').strip()            
-        except:
-            print_err(f"{selector_info} not found")
+                elif selector_info["type"] == "screenshot":
+                    fn = f'{time.time()}.png'
+                    elements[0].screenshot(os.path.join(dirname,fn))
+                    # Just to avoid unwanted errors
+                    time.sleep(1)
+                    self.mark_element(elements[0])
+                    return fn
+        except Exception as e:
+            print_err(f"{selector_info} not found {e}")
             if isinstance(selector_info, dict) and "type" in selector_info and selector_info["type"].startswith("multi"):
                 return []  # Return empty list for multi-valued selectors
             else:

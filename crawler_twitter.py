@@ -62,7 +62,15 @@ actions=[
                 "additional":{#image or reference tweet or text if above is reply to
                     "selector":"div[aria-labelledby]",
                     "type":"html"
-                }
+                },
+                "additional_screenshot":{
+                    "selector":"div[aria-labelledby]",
+                    "type":"screenshot"
+                },
+                #"additional_media_screenshot":{
+                #    "selector":"div[aria-labelledby] video, div[aria-labelledby] img[src]",
+                #    "type":"screenshot"
+                #}
             },
             main_key = "item_link",
             second_key = "additional",

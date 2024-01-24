@@ -105,8 +105,12 @@ class RecordItems(Action):
                 break
 
             for i, el in enumerate(items):
-                if driver.is_element_visited(el):
-                    #print_err(f"Skip {el.get_attribute('outerHTML')}")
+                try:
+                    if driver.is_element_visited(el):
+                        #print_err(f"Skip {el.get_attribute('outerHTML')}")
+                        continue
+                except Exception as e:
+                    print_err(f"Skip element {e}")
                     continue
 
                 data = self.extract_item_data(el, driver)
@@ -157,7 +161,7 @@ class RecordItems(Action):
 
         for key, sel in self.item_selectors.items():
             #print_err(f"{key}-{sel}")
-            data[key] = driver.extract_data(el, sel)#from el
+            data[key] = driver.extract_data(el, sel, self.data_handler.get_dirname())#from el
             #print_err(data[key])
 
         # Handle details if necessary
@@ -168,7 +172,7 @@ class RecordItems(Action):
                     driver.click_element(elem)
                 time.sleep(2)
                 for k, s in self.details_selectors.items():
-                    data[k] = driver.extract_data(driver, s)#from entire document
+                    data[k] = driver.extract_data(driver, s, self.data_handler.get_dirname())#from entire document
 
                 if self.close_details:
                     if 'selector' in self.close_details:

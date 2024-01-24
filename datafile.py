@@ -15,6 +15,10 @@ def print_err(text, end="\n"):
     print(RED + text + RESET, file=sys.stderr, end=end)
 
 class DataHandler:
+    def __init__(self, dirname):
+        if not os.path.exists(dirname):
+           os.makedirs(dirname)
+        self.dirname = dirname
 
     def save_main_file(self, signum=None, frame=None):
         pass
@@ -28,8 +32,12 @@ class DataHandler:
     def is_duplicate(self, current_data_key, second_key=None):
         pass
 
+    def get_dirname(self):
+        return self.dirname
+
 class DataFileHandler(DataHandler):
     def __init__(self, main_key, site, query):
+        super().__init__(f"{site}-{query}")
         self.main_key = main_key
         self.site = site
         self.run_start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -74,6 +82,7 @@ import sqlite3
 
 class DataSQLiteHandler(DataHandler):
     def __init__(self, main_key, site, query, second_key=None, time_key=None):
+        super().__init__(f"{site}_{query}")
         self.main_key = main_key
         self.second_key = second_key
         self.time_key = time_key
